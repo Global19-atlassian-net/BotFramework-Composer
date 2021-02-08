@@ -5,7 +5,7 @@ import formatMessage from 'format-message';
 import { FallbackProps } from 'react-error-boundary';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 
-const ErrorInfo: React.FC<FallbackProps> = ({ componentStack, error }) => (
+export const ErrorInfo: React.FC<FallbackProps> = ({ componentStack, error }) => (
   <div style={{ marginRight: '20px' }}>
     <MessageBar isMultiline={false} messageBarType={MessageBarType.error}>
       <p style={{ whiteSpace: 'pre-wrap' }}>
