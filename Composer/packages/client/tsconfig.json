@@ -8,11 +8,21 @@
     "declaration": false,
     "declarationMap": false,
     "paths": {
-      "@bfc/adaptive-flow": ["../adaptive-flow"]
+      "@bfc/adaptive-flow": ["../adaptive-flow"],
+      "@bfc/ui-plugin-*": ["../ui-plugins/*"],
     }
   },
   "include": ["./src/**/*", "./__tests__/**/*", "./extension-container/**/*"],
   "references": [
-    { "path": "../adaptive-flow" }
+    { "path": "../adaptive-flow" },
+    { "path": "../ui-plugins/composer" },
+    { "path": "../ui-plugins/cross-trained" },
+    { "path": "../ui-plugins/lg" },
+    { "path": "../ui-plugins/luis" },
+    { "path": "../ui-plugins/orchestrator" },
+    { "path": "../ui-plugins/prompts" },
+    { "path": "../ui-plugins/schema-editor" },
+    { "path": "../ui-plugins/select-dialog" },
+    { "path": "../ui-plugins/select-skill-dialog" }
   ]
 }

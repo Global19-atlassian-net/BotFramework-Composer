@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "composite": true,
     "outDir": "./lib/",
     "paths": {
       "@bfc/adaptive-form": ["../../adaptive-form"]

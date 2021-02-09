@@ -8,7 +8,7 @@ import type { MergeWithCustomizer } from 'lodash';
 import type { PluginConfig } from '@bfc/extension-client';
 import composer from '@bfc/ui-plugin-composer';
 import prompts from '@bfc/ui-plugin-prompts';
-import schemaEditor from '@bfc/ui-plugin-dialog-schema-editor';
+import schemaEditor from '@bfc/ui-plugin-schema-editor';
 import selectDialog from '@bfc/ui-plugin-select-dialog';
 import selectSkillDialog from '@bfc/ui-plugin-select-skill-dialog';
 import orchestrator from '@bfc/ui-plugin-orchestrator';

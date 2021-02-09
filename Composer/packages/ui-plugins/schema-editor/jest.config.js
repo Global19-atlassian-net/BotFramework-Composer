@@ -4,4 +4,4 @@
 
 const { createConfig } = require('@botframework-composer/test-utils');
 
-module.exports = createConfig('ui-plugin/dialog-schema-editor', 'react');
+module.exports = createConfig('ui-plugin/schema-editor', 'react');
