@@ -93,6 +93,7 @@ export const WebChatPanel: React.FC<WebChatPanelProps> = ({ botUrl, secrets, dir
 
   const webchatContent = useMemo(() => {
     if (directlineObj?.conversationId) {
+      conversationService.connectToErrorsChannel();
       conversationService.sendInitialActivity(directlineObj.conversationId, [user]);
       conversationService.saveChatData({
         conversationId: directlineObj.conversationId,

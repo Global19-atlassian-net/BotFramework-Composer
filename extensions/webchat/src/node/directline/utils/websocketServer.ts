@@ -8,8 +8,11 @@ import express, { Response } from 'express';
 import { Activity } from 'botframework-schema';
 import { Server as WSServer } from 'ws';
 
+import { LoggerLevel, LogItem } from '../store/types';
+
 import log from './logger';
 
+const socketErrorChannelKey = 'DL_ERROR_SOCKET';
 interface WebSocket {
   close(): void;
   send(data: any, cb?: (err?: Error) => void): void;
@@ -18,7 +21,9 @@ interface WebSocket {
 export class WebSocketServer {
   private static restServer: http.Server;
   private static servers: Record<string, WSServer> = {};
+  private static dLErrorsServer: WSServer;
   private static sockets: Record<string, WebSocket> = {};
+
   private static queuedMessages: { [conversationId: string]: Activity[] } = {};
 
   private static sendBackedUpMessages(conversationId: string, socket: WebSocket) {
@@ -55,6 +60,17 @@ export class WebSocketServer {
     }
   }
 
+  public static sendErrorToSubscibers(
+    conversationId: string,
+    logItem: LogItem<{
+      level: LoggerLevel;
+      text: string;
+    }>
+  ): void {
+    const socket = this.sockets[socketErrorChannelKey];
+    socket?.send(JSON.stringify({ conversationId, logItem }));
+  }
+
   public static async init(): Promise<number | void> {
     if (!this.restServer) {
       const app = express();
@@ -69,9 +85,39 @@ export class WebSocketServer {
         return app(req, res as Response);
       });
       const port = await portfinder.getPortPromise();
-
       this.port = port;
       this.restServer.listen(port);
+
+      app.use('/ws/createErrorChannel', (req: express.Request, res: express.Response) => {
+        if (!(req as any).claimUpgrade) {
+          return res.status(426).send('Connection must upgrade for web sockets.');
+        }
+
+        // initialize a new web socket server for each new conversation
+        if (!this.dLErrorsServer) {
+          const { head, socket } = (req as any).claimUpgrade();
+
+          const wsServer = new WSServer({
+            noServer: true,
+          });
+
+          wsServer.on('connection', (socket, req) => {
+            this.sockets[socketErrorChannelKey] = socket;
+
+            socket.on('close', () => {
+              this.dLErrorsServer = {} as WSServer;
+              delete this.sockets[socketErrorChannelKey];
+            });
+          });
+
+          wsServer.handleUpgrade(req as any, socket, head, (socket) => {
+            wsServer.emit('connection', socket, req);
+          });
+
+          this.dLErrorsServer = wsServer;
+          this.sockets[socketErrorChannelKey].send('Hello');
+        }
+      });
 
       app.use('/ws/:conversationId', (req: express.Request, res: express.Response) => {
         if (!(req as any).claimUpgrade) {
@@ -81,6 +127,7 @@ export class WebSocketServer {
         // initialize a new web socket server for each new conversation
         if (conversationId && !this.servers[conversationId]) {
           const { head, socket } = (req as any).claimUpgrade();
+
           const wsServer = new WSServer({
             noServer: true,
           });
@@ -95,6 +142,7 @@ export class WebSocketServer {
               delete this.queuedMessages[conversationId];
             });
           });
+
           // upgrade the connection to a ws connection
           wsServer.handleUpgrade(req as any, socket, head, (socket) => {
             wsServer.emit('connection', socket, req);
@@ -106,6 +154,8 @@ export class WebSocketServer {
       return this.port;
     }
   }
+
+  public static sendDLErrorsToSubscribers(): void {}
 
   public static cleanUpConversation(conversationId: string): void {
     if (this.sockets[conversationId]) {
@@ -121,6 +171,12 @@ export class WebSocketServer {
     for (const conversationId in this.sockets) {
       this.cleanUpConversation(conversationId);
     }
+
+    if (this.dLErrorsServer) {
+      this.sockets.errorSocket?.close();
+      this.dLErrorsServer?.close();
+    }
+
     if (this.restServer) {
       this.restServer.close();
     }

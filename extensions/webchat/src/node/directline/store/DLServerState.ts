@@ -53,7 +53,7 @@ class DLServerContext {
   ) {
     // TODO: Send the log item to the client Webchat instance to log errors.
     // eslint-disable-next-line no-console
-    console.log(conversationId + logItem.payload.text);
+    console.log(`ConversationID: ${conversationId}:` + logItem.payload);
   }
 
   private updateConversation(conversationId: string, updatedConversation: Conversation) {

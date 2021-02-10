@@ -43,6 +43,7 @@ export class ConversationService {
   private chats: Record<string, ChatData> = {};
   private directlineHostUrl: string;
   private composerApiClient: AxiosInstance;
+  private restServerForWSPort = -1;
 
   constructor(directlineHostUrl: string) {
     this.directlineHostUrl = directlineHostUrl.endsWith('/') ? directlineHostUrl.slice(0, -1) : directlineHostUrl;
@@ -82,7 +83,8 @@ export class ConversationService {
     };
 
     const secret = btoa(JSON.stringify(options));
-    console.log(secret);
+    this.restServerForWSPort = resp.data;
+
     const directLine = createDirectLine({
       token: 'emulatorToken',
       conversationId,
@@ -92,6 +94,14 @@ export class ConversationService {
       streamUrl: `ws://localhost:${resp.data}/ws/${conversationId}`,
     });
     return directLine;
+  };
+
+  connectToErrorsChannel = () => {
+    const ws = new WebSocket(`ws://localhost:${this.restServerForWSPort}/ws/createErrorChannel`);
+    ws.onmessage = (event) => {
+      debugger;
+      console.log('WebSocket message received:', event);
+    };
   };
 
   getUser = () => {
